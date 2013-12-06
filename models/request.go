@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/irwinb/inspector/config"
 	"log"
 	"net/http"
 	"strings"
@@ -40,8 +39,7 @@ func NewRequest(request *http.Request) (*Request, error) {
 		return nil, err
 	}
 
-	withoutProxy := request.RequestURI[len(config.ProxyEndpoint):]
-	tokens := strings.SplitN(withoutProxy, "/", 2)
+	tokens := strings.SplitN(request.RequestURI, "/", 2)
 	if len(tokens) < 2 {
 		return nil, errors.New("Invalid url.  No project name found.")
 	}
