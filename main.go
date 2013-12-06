@@ -53,7 +53,7 @@ func main() {
 	feeder.InitializeFeeder()
 
 	log.Println("Starting feeder.")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":80", nil); err != nil {
 		log.Println("Staritng feeder failed: ", err)
 	}
 }
