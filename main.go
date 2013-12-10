@@ -51,6 +51,8 @@ func main() {
 	http.Handle(config.ProxyEndpoint, http.StripPrefix(config.ProxyEndpoint,
 		inspectorHandler(handleRequest)))
 
+	http.Handle(config.StaticEndpoint, http.FileServer(http.Dir(config.StaticDir)))
+
 	log.Println("Initializing feeder.")
 	feeder.InitializeFeeder()
 
