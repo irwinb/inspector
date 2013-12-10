@@ -39,15 +39,22 @@ func NewRequest(request *http.Request) (*Request, error) {
 		return nil, err
 	}
 
-	tokens := strings.SplitN(request.RequestURI, "/", 2)
+	// Url will be /[ProxyEndpoint]/[project]/[path]
+	requestURI := strings.Trim(request.RequestURI, "/")
+	tokens := strings.SplitN(requestURI, "/", 3)
 	if len(tokens) < 2 {
 		return nil, errors.New("Invalid url.  No project name found.")
 	}
+	log.Println(requestURI)
 	log.Println("Request tokens: ", tokens)
 
+	if len(tokens) < 3 {
+		tokens = append(tokens, "")
+	}
+
 	req := Request{
-		Project:          tokens[0],
-		Path:             tokens[1],
+		Project:          tokens[1],
+		Path:             tokens[2],
 		Method:           request.Method,
 		Proto:            request.Proto,
 		Header:           request.Header,
