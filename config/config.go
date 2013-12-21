@@ -2,9 +2,6 @@ package config
 
 const (
 	ProxyEndpoint  = "/rproxy/"
-	FeederEndpoint = "/feeder/"
-	StaticEndpoint = "/app/"
+	FeederEndpoint = "/feeder"
 	ServerPort     = ":8080"
-
-	StaticDir = "inspector-client/"
 )

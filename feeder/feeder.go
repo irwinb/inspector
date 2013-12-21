@@ -11,10 +11,16 @@ import (
 	"sync"
 )
 
+type Connection struct {
+	socket *websocket.Conn
+	id     uint
+}
+
 var connections = list.New()
 var connectionsMutex sync.Mutex
 
-var messageQueue = make(chan models.Request)
+var messageQueue = make(chan interface{})
+var lastId uint = 0
 
 func InitializeFeeder() {
 	http.Handle(config.FeederEndpoint, websocket.Handler(SockServer))
@@ -22,15 +28,12 @@ func InitializeFeeder() {
 }
 
 func SockServer(w *websocket.Conn) {
-	ele := connections.PushFront(w)
+	ele := addConnection(w)
 
 	var message string
 	for {
 		if err := websocket.Message.Receive(w, &message); err != nil {
-			connectionsMutex.Lock()
-			defer connectionsMutex.Unlock()
-
-			connections.Remove(ele)
+			removeConnection(ele)
 			return
 		}
 		// Ignore messages.
@@ -39,31 +42,69 @@ func SockServer(w *websocket.Conn) {
 
 func startFeeder() {
 	for {
-		req := <-messageQueue
-		go Feed(&req)
+		msg := <-messageQueue
+		go feed(&msg)
 	}
 }
 
-func Feed(r *models.Request) {
+func FeedRequest(id int, p *models.Project, r *models.Request) {
+	message := models.RequestMessage{
+		TransactionId: id,
+		MessageType:   "request",
+		Project:       p,
+		Request:       r}
+	messageQueue <- message
+}
+
+func FeedResponse(id int, p *models.Project, r *models.Response) {
+	message := models.ResponseMessage{
+		TransactionId: id,
+		MessageType:   "response",
+		Project:       p,
+		Response:      r}
+	messageQueue <- message
+}
+
+func feed(r interface{}) {
 	data, err := json.Marshal(r)
 	if err != nil {
 		log.Fatal("Error converto to JSON on Feed: ", err)
 		return
 	}
 
+	connectionsMutex.Lock()
 	removeThese := make([]*list.Element, 0, 0)
-	for conn := connections.Front(); conn != nil; conn = conn.Next() {
-		w := conn.Value.(*websocket.Conn)
-		_, err := w.Write(data)
+	for ele := connections.Front(); ele != nil; ele = ele.Next() {
+		conn := ele.Value.(*Connection)
+		_, err := conn.socket.Write(data)
 		if err != nil {
 			log.Fatal("Writing JSON failed: ", err)
-			removeThese = append(removeThese, conn)
+			removeThese = append(removeThese, ele)
 		}
 	}
+	connectionsMutex.Unlock()
 
+	for _, v := range removeThese {
+		removeConnection(v)
+	}
+}
+
+func addConnection(w *websocket.Conn) *list.Element {
 	connectionsMutex.Lock()
 	defer connectionsMutex.Unlock()
-	for _, v := range removeThese {
-		connections.Remove(v)
+
+	lastId++
+	conn := Connection{
+		socket: w,
+		id:     lastId,
 	}
+	log.Println("New connection ", conn)
+	return connections.PushFront(&conn)
+}
+
+func removeConnection(ele *list.Element) {
+	log.Println("Removing connection ", ele.Value)
+	connectionsMutex.Lock()
+	defer connectionsMutex.Unlock()
+	connections.Remove(ele)
 }

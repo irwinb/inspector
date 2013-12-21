@@ -26,9 +26,13 @@ func NewDefaultStore() *MemStore {
 	memStore := &MemStore{}
 	memStore.projectsByName = make(map[string]models.Project)
 	memStore.projectsById = make(map[uint]models.Project)
+
 	memStore.CreateProject(models.Project{
 		Name:           "google",
 		TargetEndpoint: "google.ca"})
+	memStore.CreateProject(models.Project{
+		Name:           "facebook_graph",
+		TargetEndpoint: "graph.facebook.com"})
 	return memStore
 }
 

@@ -2,13 +2,15 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"github.com/irwinb/inspector/config"
 	"github.com/irwinb/inspector/feeder"
 	"github.com/irwinb/inspector/models"
 	"github.com/irwinb/inspector/store"
 	"log"
 	"net/http"
-	"time"
+	"strings"
+	"sync"
 )
 
 type InspectorError struct {
@@ -51,8 +53,6 @@ func main() {
 	http.Handle(config.ProxyEndpoint, http.StripPrefix(config.ProxyEndpoint,
 		inspectorHandler(handleRequest)))
 
-	http.Handle(config.StaticEndpoint, http.FileServer(http.Dir(config.StaticDir)))
-
 	log.Println("Initializing feeder.")
 	feeder.InitializeFeeder()
 
@@ -64,8 +64,32 @@ func main() {
 
 var httpClient = http.DefaultClient
 
+func createTargetUrl(path string, proj *models.Project) string {
+	buff := bytes.NewBufferString("http://")
+	buff.WriteString(proj.TargetEndpoint)
+	buff.WriteString("/")
+	buff.WriteString(path)
+	return buff.String()
+}
+
+var transactionId int = 0
+var idMutex sync.Mutex
+
 func handleRequest(w http.ResponseWriter, r *http.Request) *InspectorError {
-	reqData, err := models.NewRequest(r)
+	// Url will be /[proxy_endpoint]/[project]/[path]
+	requestURI := strings.Trim(r.RequestURI, "/")
+	tokens := strings.SplitN(requestURI, "/", 3)
+	if len(tokens) < 2 {
+		return &InspectorError{
+			Error: errors.New("Project not found."),
+			Code:  404}
+	}
+
+	if len(tokens) < 3 {
+		tokens = append(tokens, "")
+	}
+
+	reqInbound, err := models.NewRequest(r)
 	if err != nil {
 		log.Println("Error creating request: ", err)
 		return &InspectorError{
@@ -73,28 +97,38 @@ func handleRequest(w http.ResponseWriter, r *http.Request) *InspectorError {
 			Code:  400}
 	}
 
-	project, err := store.DefaultStore.ProjectByName(reqData.Project)
+	project, err := store.DefaultStore.ProjectByName(tokens[1])
 	if err != nil {
 		return &InspectorError{
 			Error: err}
 	}
 
-	feeder.Feed(reqData)
+	idMutex.Lock()
+	transactionId += 1
+	id := transactionId
+	idMutex.Unlock()
 
-	req, err := http.NewRequest(reqData.Method, reqData.GetUrl(project),
-		bytes.NewReader(reqData.Body))
-	req.Header = reqData.Header
+	req, err := http.NewRequest(reqInbound.Method,
+		createTargetUrl(tokens[2], project),
+		bytes.NewReader(reqInbound.Body))
+	req.Header = reqInbound.Header
+
+	if err != nil {
+		log.Println("Error creating outbound request.", err)
+		return &InspectorError{
+			Error: err,
+			Code:  500}
+	}
+
+	feeder.FeedRequest(id, project, reqInbound)
 
 	log.Println("Requesting ", req)
 
 	if err != nil {
 		return &InspectorError{
 			Error: err,
-			Code:  500,
-		}
+			Code:  500}
 	}
-
-	time.Sleep(1000 * time.Millisecond)
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -104,19 +138,22 @@ func handleRequest(w http.ResponseWriter, r *http.Request) *InspectorError {
 			Code:  400}
 	}
 
-	newResponse, err := models.NewResponse(project.Name, resp)
+	respOutbound, err := models.NewResponse(resp)
 	if err != nil {
 		return &InspectorError{
 			Error: err,
 		}
 	}
 
-	for key, vals := range newResponse.Header {
+	for key, vals := range respOutbound.Header {
 		for _, val := range vals {
 			w.Header().Add(key, val)
 		}
 	}
-	w.Write(newResponse.Body)
+	w.Write(respOutbound.Body)
 	resp.Trailer.Write(w)
+
+	feeder.FeedResponse(id, project, respOutbound)
+
 	return nil
 }

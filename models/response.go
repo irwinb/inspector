@@ -6,7 +6,6 @@ import (
 )
 
 type Response struct {
-	Project          string      `json:"prjoect"`
 	Proto            string      `json:"protocol"`
 	Header           http.Header `json:"header"`
 	Trailer          http.Header `json:"trailer"`
@@ -17,7 +16,7 @@ type Response struct {
 	StatusCode       int         `json:"status_code"`
 }
 
-func NewResponse(proj string, resp *http.Response) (*Response, error) {
+func NewResponse(resp *http.Response) (*Response, error) {
 	var body bytes.Buffer
 	_, err := body.ReadFrom(resp.Body)
 	if err != nil {
@@ -25,7 +24,6 @@ func NewResponse(proj string, resp *http.Response) (*Response, error) {
 	}
 
 	newResp := Response{
-		Project:          proj,
 		Proto:            resp.Proto,
 		Header:           resp.Header,
 		Trailer:          resp.Trailer,
