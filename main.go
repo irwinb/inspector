@@ -7,6 +7,7 @@ import (
 	"github.com/irwinb/inspector/feeder"
 	"github.com/irwinb/inspector/models"
 	"github.com/irwinb/inspector/store"
+	"github.com/mreiferson/go-httpclient"
 	"log"
 	"net/http"
 	"strings"
@@ -62,7 +63,10 @@ func main() {
 	}
 }
 
-var httpClient = http.DefaultClient
+var httpTransport = &httpclient.Transport{
+	ResponseHeaderTimeout: config.RequestTimeout,
+}
+var httpClient = http.Client{Transport: httpTransport}
 
 func createTargetUrl(path string, proj *models.Project) string {
 	buff := bytes.NewBufferString("http://")
@@ -123,12 +127,6 @@ func handleRequest(w http.ResponseWriter, r *http.Request) *InspectorError {
 	feeder.FeedRequest(id, project, reqInbound)
 
 	log.Println("Requesting ", req)
-
-	if err != nil {
-		return &InspectorError{
-			Error: err,
-			Code:  500}
-	}
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
