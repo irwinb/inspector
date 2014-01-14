@@ -6,10 +6,10 @@ import (
 )
 
 type MemStore struct {
-	projectsByName   map[string]models.Project
-	projectsById     map[uint]models.Project
-	transactionsById map[uint]models.Transaction
-	projCount        uint
+	projectsByName map[string]models.Project
+	projectsById   map[uint]models.Project
+	operationsById map[uint]models.Operation
+	projCount      uint
 }
 
 func (ms *MemStore) ProjectById(id uint) (*models.Project, error) {
@@ -68,7 +68,7 @@ func (ms *MemStore) CreateProject(proj models.Project) error {
 	return nil
 }
 
-func (ms *MemStore) NewTransaction(httpReq *http.Request) *models.Transaction {
+func (ms *MemStore) NewOperation(httpReq *http.Request) *models.Operation {
 	models.NewRequest(httpReq)
 	return nil
 }

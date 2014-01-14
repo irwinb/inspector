@@ -76,7 +76,7 @@ func createTargetUrl(path string, proj *models.Project) string {
 	return buff.String()
 }
 
-var transactionId int = 0
+var operationId int = 0
 var idMutex sync.Mutex
 
 func handleRequest(w http.ResponseWriter, r *http.Request) *InspectorError {
@@ -108,8 +108,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) *InspectorError {
 	}
 
 	idMutex.Lock()
-	transactionId += 1
-	id := transactionId
+	operationId += 1
+	id := operationId
 	idMutex.Unlock()
 
 	req, err := http.NewRequest(reqInbound.Method,

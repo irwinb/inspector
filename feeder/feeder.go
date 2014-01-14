@@ -49,19 +49,19 @@ func startFeeder() {
 
 func FeedRequest(id int, p *models.Project, r *models.Request) {
 	message := models.RequestMessage{
-		TransactionId: id,
-		MessageType:   "request",
-		Project:       p,
-		Request:       r}
+		Id:          id,
+		MessageType: "request",
+		Project:     p,
+		Request:     r}
 	messageQueue <- message
 }
 
 func FeedResponse(id int, p *models.Project, r *models.Response) {
 	message := models.ResponseMessage{
-		TransactionId: id,
-		MessageType:   "response",
-		Project:       p,
-		Response:      r}
+		Id:          id,
+		MessageType: "response",
+		Project:     p,
+		Response:    r}
 	messageQueue <- message
 }
 

@@ -14,7 +14,7 @@ type Store interface {
 	ProjectById(id uint) *models.Project
 	ProjectByName(name string) *models.Project
 	SaveProject(proj *models.Project) error
-	NewTransaction(proj *models.Project, req *models.Request) *models.Transaction
+	NewOperation(proj *models.Project, req *models.Request) *models.Operation
 }
 
 type StoreError struct {
