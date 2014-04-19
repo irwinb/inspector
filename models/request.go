@@ -11,7 +11,7 @@ import (
 type Request struct {
 	Method           string      `json:"method"`
 	Proto            string      `json:"protocol"`
-	Header           http.Header `json:"header,omitempty"`
+	Header           http.Header `json:"headers,omitempty"`
 	Body             []byte      `json:"body"`
 	ContentLength    int64       `json:"content_length"`
 	TransferEncoding []string    `json:"transfer_encoding,omitempty"`

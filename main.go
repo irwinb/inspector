@@ -76,7 +76,7 @@ func createTargetUrl(path string, proj *models.Project) string {
 	return buff.String()
 }
 
-var operationId int = 0
+var operationId uint = 0
 var idMutex sync.Mutex
 
 func handleRequest(w http.ResponseWriter, r *http.Request) *InspectorError {
@@ -112,6 +112,13 @@ func handleRequest(w http.ResponseWriter, r *http.Request) *InspectorError {
 	id := operationId
 	idMutex.Unlock()
 
+	operation := models.Operation{
+		Id:        id,
+		ProjectId: project.Id,
+		Request:   reqInbound}
+
+	log.Println("Requesting project", project)
+
 	req, err := http.NewRequest(reqInbound.Method,
 		createTargetUrl(tokens[2], project),
 		bytes.NewReader(reqInbound.Body))
@@ -124,9 +131,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) *InspectorError {
 			Code:  500}
 	}
 
-	feeder.FeedRequest(id, project, reqInbound)
-
-	log.Println("Requesting ", req)
+	feeder.FeedOperation(&operation)
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -151,7 +156,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) *InspectorError {
 	w.Write(respOutbound.Body)
 	resp.Trailer.Write(w)
 
-	feeder.FeedResponse(id, project, respOutbound)
+	operation.Response = respOutbound
+	feeder.FeedOperation(&operation)
 
 	return nil
 }

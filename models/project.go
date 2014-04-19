@@ -1,7 +1,12 @@
 package models
 
+import (
+	"time"
+)
+
 type Project struct {
-	Id             uint   `json:"id"`
-	TargetEndpoint string `json:"target_endpoint"`
-	Name           string `json:"name"`
+	Id          uint       `json:"id"`
+	Endpoints   []Endpoint `json:"endpoints"`
+	Name        string     `json:"name"`
+	LastUpdated time.Time  `json:"last_updated"`
 }

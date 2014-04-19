@@ -47,22 +47,8 @@ func startFeeder() {
 	}
 }
 
-func FeedRequest(id int, p *models.Project, r *models.Request) {
-	message := models.RequestMessage{
-		Id:          id,
-		MessageType: "request",
-		Project:     p,
-		Request:     r}
-	messageQueue <- message
-}
-
-func FeedResponse(id int, p *models.Project, r *models.Response) {
-	message := models.ResponseMessage{
-		Id:          id,
-		MessageType: "response",
-		Project:     p,
-		Response:    r}
-	messageQueue <- message
+func FeedOperation(o *models.Operation) {
+	messageQueue <- *o
 }
 
 func feed(r interface{}) {

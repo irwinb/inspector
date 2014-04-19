@@ -7,7 +7,7 @@ import (
 
 type Response struct {
 	Proto            string      `json:"protocol"`
-	Header           http.Header `json:"header"`
+	Header           http.Header `json:"headers"`
 	Trailer          http.Header `json:"trailer"`
 	Body             []byte      `json:"body"`
 	ContentLength    int64       `json:"content_length"`
@@ -32,6 +32,5 @@ func NewResponse(resp *http.Response) (*Response, error) {
 		TransferEncoding: resp.TransferEncoding,
 		Status:           resp.Status,
 		StatusCode:       resp.StatusCode}
-
 	return &newResp, nil
 }
