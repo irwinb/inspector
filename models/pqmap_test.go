@@ -35,12 +35,8 @@ func TestSetAndMin(t *testing.T) {
 		t.Error("Length should have been 5, but was", m.Len())
 	}
 
-	if max := m.Peek(); max.Id != 5 {
-		t.Error("max ID should have been 5 but was", max.Id)
-	}
-
 	if max := m.Max(); max.Id != 5 {
-		t.Error("max ID should have been 5 but was", max.Id)
+		t.Error("max ID should have been 5 but was")
 	}
 	if m.Len() != 4 {
 		t.Error("Length should have been 4, but was", m.Len())

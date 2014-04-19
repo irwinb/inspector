@@ -1,7 +1,9 @@
 package models
 
 import (
+	"bytes"
 	"container/heap"
+	"fmt"
 )
 
 // A min Priority Queue that guarantees O(1) search.
@@ -43,7 +45,7 @@ func (mp *pqMap) Set(k uint, v Project) {
 		mp.update(mp.vals[old], v)
 	} else {
 		val := data{v.Id, v, 0}
-		mp.Push(&val)
+		heap.Push(mp, &val)
 		mp.indexMap[k] = val.index
 	}
 }
@@ -54,16 +56,25 @@ func (mp *pqMap) Max() *Project {
 	if mp.Len() == 0 {
 		return nil
 	}
-	item := mp.Pop().(*data)
+	item := heap.Pop(mp).(*data)
 	delete(mp.indexMap, item.key)
 	return &item.val
 }
 
-// Peek the max element.
-// O(1)
-func (mp *pqMap) Peek() *Project {
-	n := len(mp.vals)
-	return &mp.vals[n-1].val
+func (mp *pqMap) String() string {
+	var buffer bytes.Buffer
+	buffer.WriteString("[")
+	for i, val := range mp.vals {
+		buffer.WriteString("{")
+		buffer.WriteString(fmt.Sprint(*val))
+		buffer.WriteString("}")
+		if i < len(mp.vals)-1 {
+			buffer.WriteString(",")
+		}
+	}
+	buffer.WriteString("]")
+
+	return buffer.String()
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -74,7 +85,7 @@ func (mp *pqMap) Len() int {
 }
 
 func (mp *pqMap) Less(i, j int) bool {
-	return mp.vals[i].val.LastUpdated.Before(mp.vals[j].val.LastUpdated)
+	return mp.vals[i].val.LastUpdated.After(mp.vals[j].val.LastUpdated)
 }
 
 func (mp *pqMap) Swap(i, j int) {
@@ -88,7 +99,6 @@ func (mp *pqMap) Push(v interface{}) {
 	item := v.(*data)
 	item.index = n
 	mp.vals = append(mp.vals, item)
-	heap.Fix(mp, n)
 }
 
 func (mp *pqMap) Pop() interface{} {
@@ -101,6 +111,7 @@ func (mp *pqMap) Pop() interface{} {
 
 // update modifies the priority and value of an Item in the queue.
 func (mp *pqMap) update(item *data, newVal Project) {
+	heap.Remove(mp, item.index)
 	mp.vals[item.index].val = newVal
-	heap.Fix(mp, item.index)
+	heap.Push(mp, item)
 }
