@@ -9,26 +9,26 @@ import (
 func TestSetAndMin(t *testing.T) {
 	m := newPQMap()
 	m.Set(1, Project{Id: 1, Name: "1", LastUpdated: time.Now()})
-	if p := m.Get(1); p == nil || p.Name != "1" {
+	if p := m.Search(1); p == nil || p.Name != "1" {
 		t.Error("Set failed.")
 	}
 	if m.Len() != 1 {
 		t.Error("length should be 1 but was", m.Len())
 	}
 	m.Set(2, Project{Id: 2, Name: "2", LastUpdated: time.Now()})
-	if p := m.Get(2); p == nil || p.Name != "2" {
+	if p := m.Search(2); p == nil || p.Name != "2" {
 		t.Error("Set failed.")
 	}
 	m.Set(3, Project{Id: 3, Name: "3", LastUpdated: time.Now()})
-	if p := m.Get(3); p == nil || p.Name != "3" {
+	if p := m.Search(3); p == nil || p.Name != "3" {
 		t.Error("Set failed.")
 	}
 	m.Set(4, Project{Id: 4, Name: "4", LastUpdated: time.Now()})
-	if p := m.Get(4); p == nil || p.Name != "4" {
+	if p := m.Search(4); p == nil || p.Name != "4" {
 		t.Error("Set failed.")
 	}
 	m.Set(5, Project{Id: 5, Name: "5", LastUpdated: time.Now()})
-	if p := m.Get(5); p == nil || p.Name != "5" {
+	if p := m.Search(5); p == nil || p.Name != "5" {
 		t.Error("Set failed.")
 	}
 	if m.Len() != 5 {

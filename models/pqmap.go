@@ -25,13 +25,14 @@ func newPQMap() *pqMap {
 	m := new(pqMap)
 	m.indexMap = make(map[uint]int)
 	m.vals = make([]*data, 0)
+	m.lock = &sync.Mutex{}
 	heap.Init(m)
 	return m
 }
 
 // Search by key.
 // O(1)
-func (mp *pqMap) Get(k uint) *Project {
+func (mp *pqMap) Search(k uint) *Project {
 	mp.lock.Lock()
 	defer mp.lock.Unlock()
 	data, ok := mp.indexMap[k]
