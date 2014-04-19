@@ -56,6 +56,7 @@ func (mp *pqMap) Max() *Project {
 	if mp.Len() == 0 {
 		return nil
 	}
+
 	item := heap.Pop(mp).(*data)
 	delete(mp.indexMap, item.key)
 	return &item.val
