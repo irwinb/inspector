@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"container/heap"
 	"fmt"
+	"sync"
 )
 
 // A min Priority Queue that guarantees O(1) search.
@@ -11,6 +12,7 @@ import (
 type pqMap struct {
 	vals     []*data
 	indexMap map[uint]int // Maps id to index in vals.
+	lock     *sync.Mutex
 }
 
 type data struct {
@@ -30,6 +32,8 @@ func newPQMap() *pqMap {
 // Search by key.
 // O(1)
 func (mp *pqMap) Get(k uint) *Project {
+	mp.lock.Lock()
+	defer mp.lock.Unlock()
 	data, ok := mp.indexMap[k]
 	if !ok {
 		return nil
@@ -40,6 +44,8 @@ func (mp *pqMap) Get(k uint) *Project {
 // Insert a k/v pair.
 // O(log(n))
 func (mp *pqMap) Set(k uint, v Project) {
+	mp.lock.Lock()
+	defer mp.lock.Unlock()
 	old, ok := mp.indexMap[k]
 	if ok {
 		mp.update(mp.vals[old], v)
@@ -53,10 +59,11 @@ func (mp *pqMap) Set(k uint, v Project) {
 // Pop the max element.
 // O(log(n))
 func (mp *pqMap) Max() *Project {
+	mp.lock.Lock()
+	defer mp.lock.Unlock()
 	if mp.Len() == 0 {
 		return nil
 	}
-
 	item := heap.Pop(mp).(*data)
 	delete(mp.indexMap, item.key)
 	return &item.val
@@ -82,6 +89,8 @@ func (mp *pqMap) String() string {
 // All methods below are priority queue related.
 ////////////////////////////////////////////////////////////////////////////
 func (mp *pqMap) Len() int {
+	mp.lock.Lock()
+	defer mp.lock.Unlock()
 	return len(mp.vals)
 }
 
