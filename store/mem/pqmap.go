@@ -1,15 +1,16 @@
-package models
+package mem
 
 import (
 	"bytes"
 	"container/heap"
 	"fmt"
+	"github.com/irwinb/inspector/models"
 	"sync"
 )
 
 // A min Priority Queue that guarantees O(1) search.
 // Takes O(2N) space.  A heap and map.
-type pqMap struct {
+type projectMap struct {
 	vals     []*data
 	indexMap map[uint]int // Maps id to index in vals.
 	lock     *sync.Mutex
@@ -17,12 +18,12 @@ type pqMap struct {
 
 type data struct {
 	key   uint
-	val   Project
+	val   models.Project
 	index int
 }
 
-func newPQMap() *pqMap {
-	m := new(pqMap)
+func newProjectMap() *projectMap {
+	m := new(projectMap)
 	m.indexMap = make(map[uint]int)
 	m.vals = make([]*data, 0)
 	m.lock = &sync.Mutex{}
@@ -32,7 +33,7 @@ func newPQMap() *pqMap {
 
 // Search by key.
 // O(1)
-func (mp *pqMap) Search(k uint) *Project {
+func (mp *projectMap) Search(k uint) *models.Project {
 	mp.lock.Lock()
 	defer mp.lock.Unlock()
 	data, ok := mp.indexMap[k]
@@ -44,7 +45,7 @@ func (mp *pqMap) Search(k uint) *Project {
 
 // Insert a k/v pair.
 // O(log(n))
-func (mp *pqMap) Set(k uint, v Project) {
+func (mp *projectMap) Set(k uint, v models.Project) {
 	mp.lock.Lock()
 	defer mp.lock.Unlock()
 	old, ok := mp.indexMap[k]
@@ -59,7 +60,7 @@ func (mp *pqMap) Set(k uint, v Project) {
 
 // Pop the max element.
 // O(log(n))
-func (mp *pqMap) Max() *Project {
+func (mp *projectMap) Max() *models.Project {
 	mp.lock.Lock()
 	defer mp.lock.Unlock()
 	if mp.Len() == 0 {
@@ -70,7 +71,7 @@ func (mp *pqMap) Max() *Project {
 	return &item.val
 }
 
-func (mp *pqMap) String() string {
+func (mp *projectMap) String() string {
 	var buffer bytes.Buffer
 	buffer.WriteString("[")
 	for i, val := range mp.vals {
@@ -89,30 +90,30 @@ func (mp *pqMap) String() string {
 ////////////////////////////////////////////////////////////////////////////
 // All methods below are priority queue related.
 ////////////////////////////////////////////////////////////////////////////
-func (mp *pqMap) Len() int {
+func (mp *projectMap) Len() int {
 	mp.lock.Lock()
 	defer mp.lock.Unlock()
 	return len(mp.vals)
 }
 
-func (mp *pqMap) Less(i, j int) bool {
-	return mp.vals[i].val.LastUpdated.After(mp.vals[j].val.LastUpdated)
+func (mp *projectMap) Less(i, j int) bool {
+	return mp.vals[i].val.LastUpdated.Before(mp.vals[j].val.LastUpdated)
 }
 
-func (mp *pqMap) Swap(i, j int) {
+func (mp *projectMap) Swap(i, j int) {
 	mp.vals[i], mp.vals[j] = mp.vals[j], mp.vals[i]
 	mp.vals[i].index = i
 	mp.vals[j].index = j
 }
 
-func (mp *pqMap) Push(v interface{}) {
+func (mp *projectMap) Push(v interface{}) {
 	n := len(mp.vals)
 	item := v.(*data)
 	item.index = n
 	mp.vals = append(mp.vals, item)
 }
 
-func (mp *pqMap) Pop() interface{} {
+func (mp *projectMap) Pop() interface{} {
 	n := len(mp.vals)
 	item := mp.vals[n-1]
 	item.index = -1 // for safety
@@ -121,7 +122,7 @@ func (mp *pqMap) Pop() interface{} {
 }
 
 // update modifies the priority and value of an Item in the queue.
-func (mp *pqMap) update(item *data, newVal Project) {
+func (mp *projectMap) update(item *data, newVal models.Project) {
 	heap.Remove(mp, item.index)
 	mp.vals[item.index].val = newVal
 	heap.Push(mp, item)

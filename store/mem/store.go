@@ -1,8 +1,9 @@
-package store
+package mem
 
 import (
 	"github.com/irwinb/inspector/models"
 	"net/http"
+	"time"
 )
 
 const (
@@ -24,23 +25,21 @@ const (
 // Operations O(10*N)
 // Endpoints  O(N)
 type MemStore struct {
-	projectsById   map[uint]models.Project
-	endpointsById  map[uint]*models.Endpoint
-	operationsById map[uint]*models.Operation
-	projCount      uint
+	projectPq *projectMap
+	projCount uint
 }
 
 func NewMemStore() *MemStore {
 	memStore := &MemStore{}
-	memStore.projectsByName = make(map[string]models.Project)
+	memStore.projectPq = newProjectMap()
 
 	return memStore
 }
 
 func (ms *MemStore) ProjectById(id uint) (*models.Project, error) {
-	proj, ok := ms.projectsById[id]
-	if ok {
-		return &proj, nil
+	proj := ms.projectPq.Search(id)
+	if proj != nil {
+		return proj, nil
 	} else {
 		return nil, NotFound
 	}
@@ -52,27 +51,20 @@ func (ms *MemStore) SaveProject(proj models.Project) error {
 		return err
 	}
 
-	// Validate project name.
-	projOfSameName, err := ms.ProjectByName(proj.Name)
-	if err == nil && projOfSameName.Id != proj.Id {
-		return ProjectNameExists
-	}
-
 	projInStore.Endpoints = proj.Endpoints
 	projInStore.Name = proj.Name
-	projInStore.Name = proj.Name
+	projInStore.LastUpdated = time.Now()
+
+	ms.projectPq.Set(projInStore)
 	return nil
 }
 
 func (ms *MemStore) CreateProject(proj models.Project) error {
-	if proj.TargetEndpoint == "" || proj.Name == "" {
-		return ProjectInvalid
-	}
-	_, err := ms.ProjectByName(proj.Name)
-	if err == nil {
-		return ProjectNameExists
+	if err := proj.Validate(); err != nil {
+		return err
 	}
 
+	proj.Id = ms.projCount
 	projInStore := &models.Project{
 		Id:             ms.projCount,
 		TargetEndpoint: proj.TargetEndpoint,

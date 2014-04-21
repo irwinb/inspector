@@ -1,4 +1,4 @@
-package models
+package mem
 
 import (
 	"math/rand"

@@ -9,7 +9,6 @@ var AnonStore = NewMemStore()
 
 var NotFound = NewStoreError("Not found.")
 var ProjectInvalid = NewStoreError("Invalid project format.")
-var ProjectNameExists = NewStoreError("Invalid project format.")
 var NumProjectsExceeded = NewStoreError("Number of Projects exceeded.  Try again later.")
 var NumEndpointsExceeded = NewStoreError("Number of endpoints limit exceeded.")
 
