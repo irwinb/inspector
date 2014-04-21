@@ -5,7 +5,6 @@ import (
 	"container/heap"
 	"fmt"
 	"github.com/irwinb/inspector/models"
-	"sync"
 )
 
 // A min Priority Queue that guarantees O(1) search.
@@ -13,7 +12,6 @@ import (
 type projectMap struct {
 	vals     []*data
 	indexMap map[uint]int // Maps id to index in vals.
-	lock     *sync.Mutex
 }
 
 type data struct {
@@ -26,7 +24,6 @@ func newProjectMap() *projectMap {
 	m := new(projectMap)
 	m.indexMap = make(map[uint]int)
 	m.vals = make([]*data, 0)
-	m.lock = &sync.Mutex{}
 	heap.Init(m)
 	return m
 }
@@ -34,8 +31,6 @@ func newProjectMap() *projectMap {
 // Search by key.
 // O(1)
 func (mp *projectMap) Search(k uint) *models.Project {
-	mp.lock.Lock()
-	defer mp.lock.Unlock()
 	data, ok := mp.indexMap[k]
 	if !ok {
 		return nil
@@ -46,8 +41,6 @@ func (mp *projectMap) Search(k uint) *models.Project {
 // Insert a k/v pair.
 // O(log(n))
 func (mp *projectMap) Set(k uint, v models.Project) {
-	mp.lock.Lock()
-	defer mp.lock.Unlock()
 	old, ok := mp.indexMap[k]
 	if ok {
 		mp.update(mp.vals[old], v)
@@ -61,8 +54,6 @@ func (mp *projectMap) Set(k uint, v models.Project) {
 // Pop the max element.
 // O(log(n))
 func (mp *projectMap) Max() *models.Project {
-	mp.lock.Lock()
-	defer mp.lock.Unlock()
 	if mp.Len() == 0 {
 		return nil
 	}
@@ -91,8 +82,6 @@ func (mp *projectMap) String() string {
 // All methods below are priority queue related.
 ////////////////////////////////////////////////////////////////////////////
 func (mp *projectMap) Len() int {
-	mp.lock.Lock()
-	defer mp.lock.Unlock()
 	return len(mp.vals)
 }
 
