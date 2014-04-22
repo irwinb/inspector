@@ -1,8 +1,8 @@
-package mem
+package store
 
 import (
 	"github.com/irwinb/inspector/models"
-	"github.com/irwinb/inspector/store"
+	"github.com/irwinb/inspector/store/mem"
 	"net/http"
 	"time"
 )
@@ -25,28 +25,28 @@ const (
 // Projects   O(2N)
 // Operations O(10*N)
 // Endpoints  O(N)
-type MemStore struct {
-	projectPq *projectMap
+type memStore struct {
+	projectPq *mem.ProjectMap
 	projCount uint
 }
 
-func NewMemStore() *MemStore {
-	memStore := &MemStore{}
-	memStore.projectPq = newProjectMap()
+func newMemStore() *memStore {
+	memStore := &memStore{}
+	memStore.projectPq = mem.NewProjectMap()
 
 	return memStore
 }
 
-func (ms *MemStore) ProjectById(id uint) (*models.Project, error) {
+func (ms *memStore) ProjectById(id uint) (*models.Project, error) {
 	proj := ms.projectPq.Search(id)
 	if proj != nil {
 		return proj, nil
 	} else {
-		return nil, store.NotFound
+		return nil, NotFound
 	}
 }
 
-func (ms *MemStore) SaveProject(proj models.Project) error {
+func (ms *memStore) SaveProject(proj models.Project) error {
 	projInStore, err := ms.ProjectById(proj.Id)
 	if err != nil {
 		return err
@@ -61,7 +61,7 @@ func (ms *MemStore) SaveProject(proj models.Project) error {
 	return nil
 }
 
-func (ms *MemStore) CreateProject(proj models.Project) error {
+func (ms *memStore) CreateProject(proj models.Project) error {
 	if err := proj.Validate(); err != nil {
 		return err
 	}
@@ -73,6 +73,6 @@ func (ms *MemStore) CreateProject(proj models.Project) error {
 	return nil
 }
 
-func (ms *MemStore) NewOperation(httpReq *http.Request) *models.Operation {
+func (ms *memStore) NewOperation(httpReq *http.Request) *models.Operation {
 	return nil
 }

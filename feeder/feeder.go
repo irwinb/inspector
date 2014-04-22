@@ -22,8 +22,15 @@ var connectionsMutex sync.Mutex
 var messageQueue = make(chan interface{})
 var lastId uint = 0
 
-func InitializeFeeder() {
+func InitAndListen() {
+	log.Println("Initializing feeder.")
 	http.Handle(config.FeederEndpoint, websocket.Handler(SockServer))
+
+	log.Println("Starting feeder.")
+	if err := http.ListenAndServe(config.ServerPort, nil); err != nil {
+		log.Println("Staritng feeder failed: ", err)
+	}
+
 	go startFeeder()
 }
 

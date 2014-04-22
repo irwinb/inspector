@@ -3,9 +3,11 @@ package api
 import (
 	"bytes"
 	"errors"
+	"github.com/gorilla/mux"
 	"github.com/irwinb/inspector/config"
 	"github.com/irwinb/inspector/feeder"
 	"github.com/irwinb/inspector/models"
+	"github.com/irwinb/inspector/store"
 	"github.com/mreiferson/go-httpclient"
 	"log"
 	"net/http"
@@ -19,6 +21,11 @@ var httpTransport = &httpclient.Transport{
 }
 var httpClient = http.Client{Transport: httpTransport}
 
+func initProxyApi(r *mux.Router) {
+	proxyR := r.Path(ProxyEndpoint).Subrouter()
+	proxyR.Handle("/", ApiHandler(handleProxy))
+}
+
 func createTargetUrl(path string, ep *models.Endpoint) string {
 	buff := bytes.NewBufferString("http://")
 	buff.WriteString(ep.Target)
@@ -31,7 +38,7 @@ var operationId uint = 0
 var idMutex sync.Mutex
 
 // Url will be /[project_name]/[path]
-func HandleProxy(w http.ResponseWriter, r *http.Request) *InspectorError {
+func handleProxy(w http.ResponseWriter, r *http.Request) *InspectorError {
 	requestURL := strings.Trim(r.URL.Path, "/")
 	tokens := strings.SplitN(requestURL, "/", 2)
 	if len(tokens) < 2 {
@@ -57,7 +64,7 @@ func HandleProxy(w http.ResponseWriter, r *http.Request) *InspectorError {
 			Error: err}
 	}
 
-	project, err := AnonStore.ProjectById(uint(projId))
+	project, err := store.AnonStore.ProjectById(uint(projId))
 	if err != nil {
 		return &InspectorError{
 			Error: err}

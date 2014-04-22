@@ -9,7 +9,7 @@ import (
 
 // A min Priority Queue that guarantees O(1) search.
 // Takes O(2N) space.  A heap and map.
-type projectMap struct {
+type ProjectMap struct {
 	vals     []*data
 	indexMap map[uint]int // Maps id to index in vals.
 }
@@ -20,8 +20,8 @@ type data struct {
 	index int
 }
 
-func newProjectMap() *projectMap {
-	m := new(projectMap)
+func NewProjectMap() *ProjectMap {
+	m := new(ProjectMap)
 	m.indexMap = make(map[uint]int)
 	m.vals = make([]*data, 0)
 	heap.Init(m)
@@ -30,7 +30,7 @@ func newProjectMap() *projectMap {
 
 // Search by key.
 // O(1)
-func (mp *projectMap) Search(k uint) *models.Project {
+func (mp *ProjectMap) Search(k uint) *models.Project {
 	data, ok := mp.indexMap[k]
 	if !ok {
 		return nil
@@ -40,7 +40,7 @@ func (mp *projectMap) Search(k uint) *models.Project {
 
 // Insert a k/v pair.  Key being the project's id and value being the project.
 // O(log(n))
-func (mp *projectMap) Set(v *models.Project) {
+func (mp *ProjectMap) Set(v *models.Project) {
 	old, ok := mp.indexMap[v.Id]
 	if ok {
 		mp.update(mp.vals[old], *v)
@@ -53,7 +53,7 @@ func (mp *projectMap) Set(v *models.Project) {
 
 // Pop the max element.
 // O(log(n))
-func (mp *projectMap) Max() *models.Project {
+func (mp *ProjectMap) Max() *models.Project {
 	if mp.Len() == 0 {
 		return nil
 	}
@@ -62,7 +62,7 @@ func (mp *projectMap) Max() *models.Project {
 	return &item.val
 }
 
-func (mp *projectMap) String() string {
+func (mp *ProjectMap) String() string {
 	var buffer bytes.Buffer
 	buffer.WriteString("[")
 	for i, val := range mp.vals {
@@ -81,28 +81,28 @@ func (mp *projectMap) String() string {
 ////////////////////////////////////////////////////////////////////////////
 // All methods below are priority queue related.
 ////////////////////////////////////////////////////////////////////////////
-func (mp *projectMap) Len() int {
+func (mp *ProjectMap) Len() int {
 	return len(mp.vals)
 }
 
-func (mp *projectMap) Less(i, j int) bool {
+func (mp *ProjectMap) Less(i, j int) bool {
 	return mp.vals[i].val.LastUpdated.Before(*mp.vals[j].val.LastUpdated)
 }
 
-func (mp *projectMap) Swap(i, j int) {
+func (mp *ProjectMap) Swap(i, j int) {
 	mp.vals[i], mp.vals[j] = mp.vals[j], mp.vals[i]
 	mp.vals[i].index = i
 	mp.vals[j].index = j
 }
 
-func (mp *projectMap) Push(v interface{}) {
+func (mp *ProjectMap) Push(v interface{}) {
 	n := len(mp.vals)
 	item := v.(*data)
 	item.index = n
 	mp.vals = append(mp.vals, item)
 }
 
-func (mp *projectMap) Pop() interface{} {
+func (mp *ProjectMap) Pop() interface{} {
 	n := len(mp.vals)
 	item := mp.vals[n-1]
 	item.index = -1 // for safety
@@ -111,7 +111,7 @@ func (mp *projectMap) Pop() interface{} {
 }
 
 // update modifies the priority and value of an Item in the queue.
-func (mp *projectMap) update(item *data, newVal models.Project) {
+func (mp *ProjectMap) update(item *data, newVal models.Project) {
 	heap.Remove(mp, item.index)
 	mp.vals[item.index].val = newVal
 	heap.Push(mp, item)

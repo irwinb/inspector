@@ -7,7 +7,7 @@ import (
 )
 
 func TestSetAndMin(t *testing.T) {
-	m := newPQMap()
+	m := NewPQMap()
 	m.Set(1, Project{Id: 1, Name: "1", LastUpdated: time.Now()})
 	if p := m.Search(1); p == nil || p.Name != "1" {
 		t.Error("Set failed.")

@@ -1,9 +1,13 @@
 package api
 
 import (
-	"github.com/irwinb/inspector/store"
-	"github.com/irwinb/inspector/store/mem"
+	"github.com/gorilla/mux"
+	"log"
 	"net/http"
+)
+
+const (
+	ProxyEndpoint = "/rproxy"
 )
 
 type InspectorError struct {
@@ -11,31 +15,41 @@ type InspectorError struct {
 	Code  int
 }
 
-var AnonStore = mem.NewMemStore()
+type ApiHandler func(w http.ResponseWriter, r *http.Request) *InspectorError
 
-type InspectorHandler func(w http.ResponseWriter, r *http.Request) *InspectorError
+func InitAndListen() {
+	log.Println("Initializing HTTP handlers.")
 
-func (fn InspectorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	r := mux.NewRouter()
+	initProjectApi(r)
+	initProxyApi(r)
+}
+
+func (fn ApiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := fn(w, r)
 	if err == nil || err.Code == 200 {
 		return
 	}
 
-	if err.Error == store.NotFound {
-		err.Code = 404
-	}
-
 	switch {
 	case err.Code >= 300 && err.Code < 400:
-		http.Error(w, err.Error.Error(), err.Code)
+		http.Error(w, getErrorString(err), err.Code)
 		return
 	case err.Code >= 400 && err.Code < 500:
-		http.Error(w, err.Error.Error(), err.Code)
+		http.Error(w, getErrorString(err), err.Code)
 		return
 	case err.Code >= 500 && err.Code < 600:
-		http.Error(w, err.Error.Error(), err.Code)
+		http.Error(w, getErrorString(err), err.Code)
 		return
 	}
 
 	http.Error(w, err.Error.Error(), err.Code)
+}
+
+func getErrorString(e *InspectorError) string {
+	if e == nil || e.Error == nil {
+		return ""
+	} else {
+		return e.Error.Error()
+	}
 }
