@@ -4,9 +4,6 @@ import (
 	"github.com/irwinb/inspector/models"
 )
 
-var DefaultStore = NewMemStore()
-var AnonStore = NewMemStore()
-
 var NotFound = NewStoreError("Not found.")
 var ProjectInvalid = NewStoreError("Invalid project format.")
 var NumProjectsExceeded = NewStoreError("Number of Projects exceeded.  Try again later.")

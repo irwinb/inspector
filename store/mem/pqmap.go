@@ -38,16 +38,16 @@ func (mp *projectMap) Search(k uint) *models.Project {
 	return &mp.vals[data].val
 }
 
-// Insert a k/v pair.
+// Insert a k/v pair.  Key being the project's id and value being the project.
 // O(log(n))
-func (mp *projectMap) Set(k uint, v models.Project) {
-	old, ok := mp.indexMap[k]
+func (mp *projectMap) Set(v *models.Project) {
+	old, ok := mp.indexMap[v.Id]
 	if ok {
-		mp.update(mp.vals[old], v)
+		mp.update(mp.vals[old], *v)
 	} else {
-		val := data{v.Id, v, 0}
+		val := data{v.Id, *v, 0}
 		heap.Push(mp, &val)
-		mp.indexMap[k] = val.index
+		mp.indexMap[v.Id] = val.index
 	}
 }
 
@@ -86,7 +86,7 @@ func (mp *projectMap) Len() int {
 }
 
 func (mp *projectMap) Less(i, j int) bool {
-	return mp.vals[i].val.LastUpdated.Before(mp.vals[j].val.LastUpdated)
+	return mp.vals[i].val.LastUpdated.Before(*mp.vals[j].val.LastUpdated)
 }
 
 func (mp *projectMap) Swap(i, j int) {

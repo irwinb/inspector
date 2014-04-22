@@ -2,6 +2,7 @@ package mem
 
 import (
 	"github.com/irwinb/inspector/models"
+	"github.com/irwinb/inspector/store"
 	"net/http"
 	"time"
 )
@@ -41,7 +42,7 @@ func (ms *MemStore) ProjectById(id uint) (*models.Project, error) {
 	if proj != nil {
 		return proj, nil
 	} else {
-		return nil, NotFound
+		return nil, store.NotFound
 	}
 }
 
@@ -51,9 +52,10 @@ func (ms *MemStore) SaveProject(proj models.Project) error {
 		return err
 	}
 
-	projInStore.Endpoints = proj.Endpoints
+	projInStore.Endpoint = proj.Endpoint
 	projInStore.Name = proj.Name
-	projInStore.LastUpdated = time.Now()
+	now := time.Now()
+	projInStore.LastUpdated = &now
 
 	ms.projectPq.Set(projInStore)
 	return nil
@@ -65,15 +67,8 @@ func (ms *MemStore) CreateProject(proj models.Project) error {
 	}
 
 	proj.Id = ms.projCount
-	projInStore := &models.Project{
-		Id:             ms.projCount,
-		TargetEndpoint: proj.TargetEndpoint,
-		Name:           proj.Name}
-
+	ms.projectPq.Push(&proj)
 	ms.projCount++
-
-	ms.projectsById[projInStore.Id] = *projInStore
-	ms.projectsByName[projInStore.Name] = *projInStore
 
 	return nil
 }
