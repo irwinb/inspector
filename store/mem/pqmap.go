@@ -15,7 +15,6 @@ type ProjectMap struct {
 }
 
 type data struct {
-	key   uint
 	val   models.Project
 	index int
 }
@@ -26,6 +25,16 @@ func NewProjectMap() *ProjectMap {
 	m.vals = make([]*data, 0)
 	heap.Init(m)
 	return m
+}
+
+func (mp *ProjectMap) List() []models.Project {
+	num := len(mp.vals)
+	list := make([]models.Project, num, num)
+	for i := 0; i < num; i++ {
+		list[i] = mp.vals[i].val
+	}
+
+	return list
 }
 
 // Search by key.
@@ -45,9 +54,8 @@ func (mp *ProjectMap) Set(v *models.Project) {
 	if ok {
 		mp.update(mp.vals[old], *v)
 	} else {
-		val := data{v.Id, *v, 0}
+		val := data{*v, -1}
 		heap.Push(mp, &val)
-		mp.indexMap[v.Id] = val.index
 	}
 }
 
@@ -58,7 +66,7 @@ func (mp *ProjectMap) Max() *models.Project {
 		return nil
 	}
 	item := heap.Pop(mp).(*data)
-	delete(mp.indexMap, item.key)
+	delete(mp.indexMap, item.val.Id)
 	return &item.val
 }
 
@@ -93,6 +101,8 @@ func (mp *ProjectMap) Swap(i, j int) {
 	mp.vals[i], mp.vals[j] = mp.vals[j], mp.vals[i]
 	mp.vals[i].index = i
 	mp.vals[j].index = j
+	mp.indexMap[mp.vals[i].val.Id] = i
+	mp.indexMap[mp.vals[j].val.Id] = j
 }
 
 func (mp *ProjectMap) Push(v interface{}) {
@@ -100,6 +110,7 @@ func (mp *ProjectMap) Push(v interface{}) {
 	item := v.(*data)
 	item.index = n
 	mp.vals = append(mp.vals, item)
+	mp.indexMap[item.val.Id] = item.index
 }
 
 func (mp *ProjectMap) Pop() interface{} {
@@ -113,6 +124,7 @@ func (mp *ProjectMap) Pop() interface{} {
 // update modifies the priority and value of an Item in the queue.
 func (mp *ProjectMap) update(item *data, newVal models.Project) {
 	heap.Remove(mp, item.index)
-	mp.vals[item.index].val = newVal
+	delete(mp.indexMap, item.val.Id)
+	item.val = newVal
 	heap.Push(mp, item)
 }

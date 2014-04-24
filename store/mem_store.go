@@ -3,6 +3,7 @@ package store
 import (
 	"github.com/irwinb/inspector/models"
 	"github.com/irwinb/inspector/store/mem"
+	"log"
 	"net/http"
 	"time"
 )
@@ -42,14 +43,25 @@ func (ms *memStore) ProjectById(id uint) (*models.Project, error) {
 	if proj != nil {
 		return proj, nil
 	} else {
-		return nil, NotFound
+		return nil, nil
 	}
 }
 
-func (ms *memStore) SaveProject(proj models.Project) error {
+func (ms *memStore) ListProjects() []models.Project {
+	return ms.projectPq.List()
+}
+
+func (ms *memStore) SaveProject(proj models.Project) (*models.Project, error) {
+	log.Println("Before:", ms.projectPq.String())
 	projInStore, err := ms.ProjectById(proj.Id)
 	if err != nil {
-		return err
+		return nil, err
+	} else if projInStore == nil {
+		return ms.createProject(proj)
+	}
+
+	if err := proj.Validate(); err != nil {
+		return nil, err
 	}
 
 	projInStore.Endpoint = proj.Endpoint
@@ -58,19 +70,24 @@ func (ms *memStore) SaveProject(proj models.Project) error {
 	projInStore.LastUpdated = &now
 
 	ms.projectPq.Set(projInStore)
-	return nil
+	log.Println("After:", ms.projectPq.String())
+
+	return projInStore, nil
 }
 
-func (ms *memStore) CreateProject(proj models.Project) error {
+func (ms *memStore) createProject(proj models.Project) (*models.Project, error) {
 	if err := proj.Validate(); err != nil {
-		return err
+		return nil, err
 	}
-
-	proj.Id = ms.projCount
-	ms.projectPq.Push(&proj)
 	ms.projCount++
 
-	return nil
+	now := time.Now()
+	proj.LastUpdated = &now
+	proj.Id = ms.projCount
+
+	ms.projectPq.Set(&proj)
+
+	return &proj, nil
 }
 
 func (ms *memStore) NewOperation(httpReq *http.Request) *models.Operation {

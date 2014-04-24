@@ -8,6 +8,7 @@ import (
 
 const (
 	ProxyEndpoint = "/rproxy"
+	port          = ":8000"
 )
 
 type InspectorError struct {
@@ -17,12 +18,14 @@ type InspectorError struct {
 
 type ApiHandler func(w http.ResponseWriter, r *http.Request) *InspectorError
 
-func InitAndListen() {
+func InitAndListen() error {
 	log.Println("Initializing HTTP handlers.")
 
 	r := mux.NewRouter()
-	initProjectApi(r)
 	initProxyApi(r)
+	initProjectApi(r)
+
+	return http.ListenAndServe(port, r)
 }
 
 func (fn ApiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {

@@ -15,7 +15,8 @@ var NumEndpointsExceeded = NewStoreError("Number of endpoints limit exceeded.")
 // the object at hand should be overwritten.  If not, create it.
 type Store interface {
 	ProjectById(id uint) *models.Project
-	SaveProject(p *models.Project) error
+	SaveProject(p *models.Project) (*models.Project, error)
+	ListProjects() []models.Project
 	SaveEndpoint(p *models.Project, ep *models.Endpoint) error
 	SaveOperation(p *models.Project, op *models.Operation) error
 }

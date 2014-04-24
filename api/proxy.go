@@ -22,8 +22,7 @@ var httpTransport = &httpclient.Transport{
 var httpClient = http.Client{Transport: httpTransport}
 
 func initProxyApi(r *mux.Router) {
-	proxyR := r.Path(ProxyEndpoint).Subrouter()
-	proxyR.Handle("/", ApiHandler(handleProxy))
+	r.Handle("/rproxy", ApiHandler(handleProxy))
 }
 
 func createTargetUrl(path string, ep *models.Endpoint) string {

@@ -9,7 +9,9 @@ import (
 func main() {
 	log.Println("Starting server.")
 
-	api.InitAndListen()
+	if err := api.InitAndListen(); err != nil {
+		log.Println("Staritng feeder failed: ", err)
+	}
 
 	feeder.InitAndListen()
 }
