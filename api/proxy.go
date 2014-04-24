@@ -22,12 +22,12 @@ var httpTransport = &httpclient.Transport{
 var httpClient = http.Client{Transport: httpTransport}
 
 func initProxyApi(r *mux.Router) {
-	r.Handle("/rproxy", ApiHandler(handleProxy))
+	http.Handle("/rproxy/", ApiHandler(handleProxy))
 }
 
 func createTargetUrl(path string, ep *models.Endpoint) string {
 	buff := bytes.NewBufferString("http://")
-	buff.WriteString(ep.Target)
+	buff.WriteString(*ep.Target)
 	buff.WriteString("/")
 	buff.WriteString(path)
 	return buff.String()
@@ -39,14 +39,15 @@ var idMutex sync.Mutex
 // Url will be /[project_name]/[path]
 func handleProxy(w http.ResponseWriter, r *http.Request) *InspectorError {
 	requestURL := strings.Trim(r.URL.Path, "/")
-	tokens := strings.SplitN(requestURL, "/", 2)
+	tokens := strings.SplitN(requestURL, "/", 3)
+	log.Println(tokens)
 	if len(tokens) < 2 {
 		return &InspectorError{
 			Error: errors.New("Project not found."),
 			Code:  404}
 	}
 
-	if len(tokens) < 2 {
+	if len(tokens) < 3 {
 		tokens = append(tokens, "")
 	}
 
@@ -68,6 +69,11 @@ func handleProxy(w http.ResponseWriter, r *http.Request) *InspectorError {
 		return &InspectorError{
 			Error: err}
 	}
+	if project == nil {
+		return &InspectorError{
+			Error: errors.New("Project not found."),
+			Code:  404}
+	}
 
 	if project.Endpoint == nil {
 		return &InspectorError{
@@ -82,10 +88,9 @@ func handleProxy(w http.ResponseWriter, r *http.Request) *InspectorError {
 
 	operation := models.Operation{
 		Id:        id,
-		ProjectId: project.Id,
+		ProjectId: new(uint),
 		Request:   reqInbound}
-
-	log.Println("Requesting project", project)
+	*operation.ProjectId = project.Id
 
 	req, err := http.NewRequest(reqInbound.Method,
 		createTargetUrl(tokens[2], project.Endpoint),
@@ -101,6 +106,7 @@ func handleProxy(w http.ResponseWriter, r *http.Request) *InspectorError {
 
 	feeder.FeedOperation(&operation)
 
+	log.Println("Requesting", *req)
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		log.Println("Request failed: ", err)
@@ -108,6 +114,7 @@ func handleProxy(w http.ResponseWriter, r *http.Request) *InspectorError {
 			Error: err,
 			Code:  400}
 	}
+	log.Println("Response", *resp)
 
 	respOutbound, err := models.NewResponse(resp)
 	if err != nil {

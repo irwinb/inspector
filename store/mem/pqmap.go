@@ -94,7 +94,7 @@ func (mp *ProjectMap) Len() int {
 }
 
 func (mp *ProjectMap) Less(i, j int) bool {
-	return mp.vals[i].val.LastUpdated.Before(*mp.vals[j].val.LastUpdated)
+	return mp.vals[i].val.LastUpdated.Before(mp.vals[j].val.LastUpdated)
 }
 
 func (mp *ProjectMap) Swap(i, j int) {

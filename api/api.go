@@ -22,10 +22,12 @@ func InitAndListen() error {
 	log.Println("Initializing HTTP handlers.")
 
 	r := mux.NewRouter()
-	initProxyApi(r)
 	initProjectApi(r)
+	initProxyApi(r)
 
-	return http.ListenAndServe(port, r)
+	http.Handle("/", r)
+
+	return http.ListenAndServe(port, nil)
 }
 
 func (fn ApiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {

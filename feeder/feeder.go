@@ -11,6 +11,10 @@ import (
 	"sync"
 )
 
+const (
+	FeederBuffer = 1000
+)
+
 type Connection struct {
 	socket *websocket.Conn
 	id     uint
@@ -19,7 +23,7 @@ type Connection struct {
 var connections = list.New()
 var connectionsMutex sync.Mutex
 
-var messageQueue = make(chan interface{})
+var messageQueue = make(chan interface{}, FeederBuffer)
 var lastId uint = 0
 
 func InitAndListen() {

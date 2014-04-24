@@ -3,7 +3,6 @@ package store
 import (
 	"github.com/irwinb/inspector/models"
 	"github.com/irwinb/inspector/store/mem"
-	"log"
 	"net/http"
 	"time"
 )
@@ -52,7 +51,6 @@ func (ms *memStore) ListProjects() []models.Project {
 }
 
 func (ms *memStore) SaveProject(proj models.Project) (*models.Project, error) {
-	log.Println("Before:", ms.projectPq.String())
 	projInStore, err := ms.ProjectById(proj.Id)
 	if err != nil {
 		return nil, err
@@ -64,13 +62,11 @@ func (ms *memStore) SaveProject(proj models.Project) (*models.Project, error) {
 		return nil, err
 	}
 
-	projInStore.Endpoint = proj.Endpoint
-	projInStore.Name = proj.Name
-	now := time.Now()
-	projInStore.LastUpdated = &now
+	*projInStore.Endpoint = *proj.Endpoint
+	*projInStore.Name = *proj.Name
+	projInStore.LastUpdated = time.Now()
 
 	ms.projectPq.Set(projInStore)
-	log.Println("After:", ms.projectPq.String())
 
 	return projInStore, nil
 }
@@ -81,9 +77,11 @@ func (ms *memStore) createProject(proj models.Project) (*models.Project, error) 
 	}
 	ms.projCount++
 
-	now := time.Now()
-	proj.LastUpdated = &now
+	proj.LastUpdated = time.Now()
 	proj.Id = ms.projCount
+	if proj.Endpoint.Operations == nil {
+		proj.Endpoint.Operations = make([]models.Operation, 0, 0)
+	}
 
 	ms.projectPq.Set(&proj)
 
