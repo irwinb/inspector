@@ -18,7 +18,7 @@ type InspectorError struct {
 
 type ApiHandler func(w http.ResponseWriter, r *http.Request) *InspectorError
 
-func InitAndListen() error {
+func Init() {
 	log.Println("Initializing HTTP handlers.")
 
 	r := mux.NewRouter()
@@ -26,8 +26,6 @@ func InitAndListen() error {
 	initProxyApi(r)
 
 	http.Handle("/", r)
-
-	return http.ListenAndServe(port, nil)
 }
 
 func (fn ApiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
