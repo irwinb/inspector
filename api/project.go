@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/irwinb/inspector/models"
 	"github.com/irwinb/inspector/store"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -69,6 +70,7 @@ func postProject(w http.ResponseWriter, r *http.Request) *InspectorError {
 	var proj models.Project
 
 	if err := dec.Decode(&proj); err != nil {
+		log.Println(err)
 		return &InspectorError{errors.New("Invalid body."), 400}
 	}
 

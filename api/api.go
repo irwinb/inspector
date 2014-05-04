@@ -22,6 +22,7 @@ func Init() {
 	log.Println("Initializing HTTP handlers.")
 
 	r := mux.NewRouter()
+
 	initProjectApi(r)
 	initProxyApi(r)
 
