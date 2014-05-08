@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/irwinb/inspector/api"
-	"github.com/irwinb/inspector/config"
-	"github.com/irwinb/inspector/feeder"
+	"inspector/api"
+	"inspector/config"
+	"inspector/feeder"
 	"log"
 	"net/http"
 )

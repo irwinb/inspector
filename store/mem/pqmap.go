@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"container/heap"
 	"fmt"
-	"github.com/irwinb/inspector/models"
+	"inspector/models"
 )
 
 // A min Priority Queue that guarantees O(1) search.

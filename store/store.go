@@ -1,7 +1,7 @@
 package store
 
 import (
-	"github.com/irwinb/inspector/models"
+	"inspector/models"
 )
 
 var AnonStore = newMemStore()

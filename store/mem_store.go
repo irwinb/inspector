@@ -1,8 +1,8 @@
 package store
 
 import (
-	"github.com/irwinb/inspector/models"
-	"github.com/irwinb/inspector/store/mem"
+	"inspector/models"
+	"inspector/store/mem"
 	"net/http"
 	"time"
 )
