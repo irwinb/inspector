@@ -22,6 +22,9 @@ func (p *Project) Validate() error {
 	if p.Endpoint == nil {
 		return errors.New("The project must have an endpoing.")
 	}
+	if err := p.Endpoint.Validate(); err != nil {
+		return err
+	}
 
 	return nil
 }

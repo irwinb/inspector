@@ -9,11 +9,12 @@ type Response struct {
 	Proto            string      `json:"protocol"`
 	Header           http.Header `json:"headers"`
 	Trailer          http.Header `json:"trailer"`
-	Body             []byte      `json:"body"`
+	Body             string      `json:"body"`
 	ContentLength    int64       `json:"content_length"`
 	TransferEncoding []string    `json:"transfer_encoding"`
 	Status           string      `json:"status"`
 	StatusCode       int         `json:"status_code"`
+	Timestamp        int64       `json:"timestamp"`
 }
 
 func NewResponse(resp *http.Response) (*Response, error) {
@@ -27,7 +28,7 @@ func NewResponse(resp *http.Response) (*Response, error) {
 		Proto:            resp.Proto,
 		Header:           resp.Header,
 		Trailer:          resp.Trailer,
-		Body:             body.Bytes(),
+		Body:             body.String(),
 		ContentLength:    resp.ContentLength,
 		TransferEncoding: resp.TransferEncoding,
 		Status:           resp.Status,

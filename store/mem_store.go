@@ -50,12 +50,12 @@ func (ms *memStore) ListProjects() []models.Project {
 	return ms.projectPq.List()
 }
 
-func (ms *memStore) SaveProject(proj models.Project) (*models.Project, error) {
+func (ms *memStore) SaveProject(proj *models.Project) (*models.Project, error) {
 	projInStore, err := ms.ProjectById(proj.Id)
 	if err != nil {
 		return nil, err
 	} else if projInStore == nil {
-		return ms.createProject(proj)
+		return ms.createProject(*proj)
 	}
 
 	if err := proj.Validate(); err != nil {
@@ -79,9 +79,6 @@ func (ms *memStore) createProject(proj models.Project) (*models.Project, error) 
 
 	proj.LastUpdated = time.Now()
 	proj.Id = ms.projCount
-	if proj.Endpoint.Operations == nil {
-		proj.Endpoint.Operations = make([]models.Operation, 0, 0)
-	}
 
 	ms.projectPq.Set(&proj)
 

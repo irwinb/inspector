@@ -18,6 +18,7 @@ type Request struct {
 	Host             string      `json:"host"`
 	RemoteAddr       string      `json:"remote_addr"`
 	RequestURI       string      `json:"request_uri"`
+	Timestamp        int64       `json:"timestamp"`
 }
 
 func (r *Request) String() string {

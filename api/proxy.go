@@ -4,16 +4,17 @@ import (
 	"bytes"
 	"errors"
 	"github.com/gorilla/mux"
+	"github.com/mreiferson/go-httpclient"
 	"inspector/config"
 	"inspector/feeder"
 	"inspector/models"
 	"inspector/store"
-	"github.com/mreiferson/go-httpclient"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 var httpTransport = &httpclient.Transport{
@@ -26,10 +27,13 @@ func initProxyApi(r *mux.Router) {
 }
 
 func createTargetUrl(path string, ep *models.Endpoint) string {
-	buff := bytes.NewBufferString("http://")
+	buff := bytes.NewBufferString(*ep.Protocol)
+	buff.WriteString("://")
 	buff.WriteString(*ep.Target)
-	buff.WriteString("/")
-	buff.WriteString(path)
+	if len(path) > 0 {
+		buff.WriteString("/")
+		buff.WriteString(path)
+	}
 	return buff.String()
 }
 
@@ -64,6 +68,8 @@ func handleProxy(w http.ResponseWriter, r *http.Request) *InspectorError {
 			Error: err}
 	}
 
+	log.Println("Project ID: ", projId)
+
 	project, err := store.AnonStore.ProjectById(uint(projId))
 	if err != nil {
 		return &InspectorError{
@@ -81,6 +87,8 @@ func handleProxy(w http.ResponseWriter, r *http.Request) *InspectorError {
 			Code:  400}
 	}
 
+	log.Println("Project: ", *project.Endpoint.Target)
+
 	idMutex.Lock()
 	operationId += 1
 	id := operationId
@@ -95,6 +103,7 @@ func handleProxy(w http.ResponseWriter, r *http.Request) *InspectorError {
 	req, err := http.NewRequest(reqInbound.Method,
 		createTargetUrl(tokens[2], project.Endpoint),
 		bytes.NewReader(reqInbound.Body))
+
 	req.Header = reqInbound.Header
 
 	if err != nil {
@@ -106,7 +115,7 @@ func handleProxy(w http.ResponseWriter, r *http.Request) *InspectorError {
 
 	feeder.FeedOperation(&operation)
 
-	log.Println("Requesting", *req)
+	operation.Request.Timestamp = time.Now().UTC().UnixNano()
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		log.Println("Request failed: ", err)
@@ -114,25 +123,28 @@ func handleProxy(w http.ResponseWriter, r *http.Request) *InspectorError {
 			Error: err,
 			Code:  400}
 	}
-	log.Println("Response", *resp)
-
 	respOutbound, err := models.NewResponse(resp)
 	if err != nil {
 		return &InspectorError{
 			Error: err,
 		}
 	}
+	operation.Response = respOutbound
+	operation.Response.Timestamp = time.Now().UTC().UnixNano()
 
 	for key, vals := range respOutbound.Header {
 		for _, val := range vals {
 			w.Header().Add(key, val)
 		}
 	}
-	w.Write(respOutbound.Body)
+	w.Write([]byte(respOutbound.Body))
 	resp.Trailer.Write(w)
 
-	operation.Response = respOutbound
 	feeder.FeedOperation(&operation)
+
+	project.Endpoint.Operations.PushBack(&operation)
+
+	store.AnonStore.SaveProject(project)
 
 	return nil
 }

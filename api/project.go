@@ -74,7 +74,7 @@ func postProject(w http.ResponseWriter, r *http.Request) *InspectorError {
 		return &InspectorError{errors.New("Invalid body."), 400}
 	}
 
-	newProj, err := store.AnonStore.SaveProject(proj)
+	newProj, err := store.AnonStore.SaveProject(&proj)
 	if err != nil {
 		return &InspectorError{err, 400}
 	} else {
